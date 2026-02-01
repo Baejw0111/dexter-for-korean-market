@@ -1,36 +1,37 @@
 /**
  * Rich description for the financial_search tool.
- * Used in the system prompt to guide the LLM on when and how to use this tool.
+ * 한국 주식 시장용으로 수정됨
  */
 export const FINANCIAL_SEARCH_DESCRIPTION = `
-Intelligent meta-tool for financial data research. Takes a natural language query and automatically routes to appropriate financial data sources including stock prices, company financials, SEC filings, analyst estimates, and more.
+한국 주식 시장 금융 데이터 리서치를 위한 지능형 메타 도구입니다. 자연어 쿼리를 받아 주가, 재무제표, 공시, 투자자 매매동향 등 적절한 데이터 소스로 자동 라우팅합니다.
 
-## When to Use
+## 사용 시기
 
-- Company facts (sector, industry, market cap, number of employees, listing date, exchange, location, weighted average shares, website)
-- Stock prices (current snapshots or historical data)
-- Company financials (income statements, balance sheets, cash flow statements)
-- Financial metrics (P/E ratio, market cap, EPS, dividend yield, enterprise value)
-- SEC filings (10-K annual reports, 10-Q quarterly reports, 8-K current reports)
-- Analyst estimates and price targets
-- Company news and announcements
-- Insider trading activity
-- Cryptocurrency prices
-- Revenue segment breakdowns
-- Multi-company comparisons (pass the full query, it handles routing internally)
+- 기업 정보 (업종, 대표자, 설립일, 결산월)
+- 주가 (현재가 스냅샷 또는 과거 시세)
+- 재무제표 (손익계산서, 재무상태표, 현금흐름표)
+- 공시 (사업보고서, 분기보고서, 주요사항보고)
+- 내부자 거래 (임원/주요주주 지분 변동)
+- 대주주 현황 (5% 이상 대량보유 보고)
+- 시장 순위 (상승률, 하락률, 거래량 상위 종목)
+- 투자자별 매매동향 (외국인, 기관, 개인 수급)
+- 공매도 현황
+- 신용잔고 추이
+- 복수 종목 비교 (전체 쿼리를 전달하면 내부에서 처리)
 
-## When NOT to Use
+## 사용하지 않을 때
 
-- General web searches or non-financial topics (use web_search instead)
-- Questions that don't require external financial data (answer directly from knowledge)
-- Non-public company information
-- Real-time trading or order execution
+- 일반 웹 검색이나 금융 외 주제 (web_search 사용)
+- 한국 뉴스 검색 (news_search 사용)
+- 외부 금융 데이터가 필요 없는 질문 (직접 답변)
+- 비상장 기업 정보
+- 실시간 매매 또는 주문 실행
 
-## Usage Notes
+## 사용 참고사항
 
-- Call ONCE with the complete natural language query - the tool handles complexity internally
-- For comparisons like "compare AAPL vs MSFT revenue", pass the full query as-is
-- Handles ticker resolution automatically (Apple -> AAPL, Microsoft -> MSFT)
-- Handles date inference (e.g., "last quarter", "past 5 years", "YTD")
-- Returns structured JSON data with source URLs for verification
+- 완전한 자연어 쿼리로 한 번만 호출 - 도구가 내부적으로 복잡성 처리
+- "삼성전자 vs SK하이닉스 매출 비교" 같은 비교 쿼리는 그대로 전달
+- 종목코드 자동 변환 (삼성전자 → 005930, SK하이닉스 → 000660)
+- 날짜 추론 지원 (예: "최근 분기", "올해", "작년")
+- 검증을 위한 소스 URL과 함께 구조화된 JSON 데이터 반환
 `.trim();

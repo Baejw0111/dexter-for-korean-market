@@ -5,107 +5,144 @@ import { callLlm } from '../../model/llm.js';
 import { formatToolResult } from '../types.js';
 import { getCurrentDate } from '../../agent/prompts.js';
 
-// Import all finance tools directly (avoid circular deps with index.ts)
-import { getIncomeStatements, getBalanceSheets, getCashFlowStatements, getAllFinancialStatements } from './fundamentals.js';
-import { getFilings, get10KFilingItems, get10QFilingItems, get8KFilingItems } from './filings.js';
-import { getPriceSnapshot, getPrices } from './prices.js';
-import { getFinancialMetricsSnapshot, getFinancialMetrics } from './metrics.js';
-import { getNews } from './news.js';
-import { getAnalystEstimates } from './estimates.js';
-import { getSegmentedRevenues } from './segments.js';
-import { getCryptoPriceSnapshot, getCryptoPrices, getCryptoTickers } from './crypto.js';
-import { getInsiderTrades } from './insider_trades.js';
-import { getCompanyFacts } from './company_facts.js';
+// === 한국 시장 도구 Import ===
 
-// All finance tools available for routing
-const FINANCE_TOOLS: StructuredToolInterface[] = [
-  // Price Data
-  getPriceSnapshot,
-  getPrices,
-  getCryptoPriceSnapshot,
-  getCryptoPrices,
-  getCryptoTickers,
-  // Fundamentals
+// KIS 주가 조회
+import { getPriceSnapshot, getPrices } from './kis/prices.js';
+// KIS 시장 정보
+import { getTopGainers, getTopLosers, getVolumeRanking } from './kis/market.js';
+// KIS 한국 특화
+import { getInvestorTrends, getCreditBalance, getShortSelling, getProgramTrading } from './kis/korea-specific.js';
+
+// DART 재무제표
+import {
   getIncomeStatements,
   getBalanceSheets,
   getCashFlowStatements,
   getAllFinancialStatements,
-  // Metrics & Estimates
-  getFinancialMetricsSnapshot,
-  getFinancialMetrics,
-  getAnalystEstimates,
-  // SEC Filings
-  getFilings,
-  get10KFilingItems,
-  get10QFilingItems,
-  get8KFilingItems,
-  // Other Data
-  getNews,
+} from './dart/fundamentals.js';
+// DART 공시
+import { getDisclosures, getCompanyInfo } from './dart/disclosures.js';
+// DART 내부자 거래
+import { getInsiderTrades, getMajorShareholder } from './dart/insider.js';
+
+// 한국 시장용 금융 도구 목록
+const FINANCE_TOOLS: StructuredToolInterface[] = [
+  // === 주가 (KIS) ===
+  getPriceSnapshot,
+  getPrices,
+  // === 시장 정보 (KIS) ===
+  getTopGainers,
+  getTopLosers,
+  getVolumeRanking,
+  // === 한국 특화 (KIS) ===
+  getInvestorTrends,
+  getCreditBalance,
+  getShortSelling,
+  getProgramTrading,
+  // === 재무제표 (DART) ===
+  getIncomeStatements,
+  getBalanceSheets,
+  getCashFlowStatements,
+  getAllFinancialStatements,
+  // === 공시 (DART) ===
+  getDisclosures,
+  getCompanyInfo,
+  // === 내부자 거래 (DART) ===
   getInsiderTrades,
-  getSegmentedRevenues,
-  getCompanyFacts,
+  getMajorShareholder,
 ];
 
 // Create a map for quick tool lookup by name
 const FINANCE_TOOL_MAP = new Map(FINANCE_TOOLS.map(t => [t.name, t]));
 
-// Build the router system prompt - simplified since LLM sees tool schemas
+// Build the router system prompt - 한국 시장용
 function buildRouterPrompt(): string {
-  return `You are a financial data routing assistant.
-Current date: ${getCurrentDate()}
+  return `당신은 한국 주식 시장 금융 데이터 라우팅 어시스턴트입니다.
+현재 날짜: ${getCurrentDate()}
 
-Given a user's natural language query about financial data, call the appropriate financial tool(s).
+사용자의 자연어 쿼리를 분석하여 적절한 금융 도구를 호출하세요.
 
-## Guidelines
+## 종목코드 변환
 
-1. **Ticker Resolution**: Convert company names to ticker symbols:
-   - Apple → AAPL, Tesla → TSLA, Microsoft → MSFT, Amazon → AMZN
-   - Google/Alphabet → GOOGL, Meta/Facebook → META, Nvidia → NVDA
+한국 주식은 6자리 숫자 종목코드를 사용합니다:
+- 삼성전자 → 005930
+- SK하이닉스 → 000660
+- 현대차 → 005380
+- 기아 → 000270
+- NAVER → 035420
+- 카카오 → 035720
+- LG화학 → 051910
+- 삼성SDI → 006400
+- 현대모비스 → 012330
+- 셀트리온 → 068270
+- 포스코홀딩스 → 005490
+- KB금융 → 105560
+- 신한지주 → 055550
+- 삼성바이오로직스 → 207940
+- LG에너지솔루션 → 373220
 
-2. **Date Inference**: Convert relative dates to YYYY-MM-DD format:
-   - "last year" → start_date 1 year ago, end_date today
-   - "last quarter" → start_date 3 months ago, end_date today
-   - "past 5 years" → start_date 5 years ago, end_date today
-   - "YTD" → start_date Jan 1 of current year, end_date today
+## 날짜 변환
 
-3. **Tool Selection**:
-   - For "current" or "latest" data, use snapshot tools (get_price_snapshot, get_financial_metrics_snapshot)
-   - For "historical" or "over time" data, use date-range tools
-   - For P/E ratio, market cap, valuation metrics → get_financial_metrics_snapshot
-   - For revenue, earnings, profitability → get_income_statements
-   - For debt, assets, equity → get_balance_sheets
-   - For cash flow, free cash flow → get_cash_flow_statements
-   - For comprehensive analysis → get_all_financial_statements
+상대 날짜를 YYYYMMDD 형식으로 변환:
+- "최근 1개월" → start_date 30일 전
+- "최근 분기" → start_date 3개월 전
+- "올해" → start_date 1월 1일
+- "작년" → 전년도
 
-4. **Efficiency**:
-   - Prefer specific tools over general ones when possible
-   - Use get_all_financial_statements only when multiple statement types needed
-   - For comparisons between companies, call the same tool for each ticker
+## 도구 선택 가이드
 
-Call the appropriate tool(s) now.`;
+### 주가 데이터
+- 현재가, 시세 → get_price_snapshot
+- 과거 주가, 차트 → get_prices
+
+### 재무제표 (DART)
+- 매출, 영업이익, 순이익 → get_income_statements
+- 자산, 부채, 자본 → get_balance_sheets
+- 현금흐름 → get_cash_flow_statements
+- 종합 재무분석 → get_all_financial_statements
+
+### 공시 (DART)
+- 공시, 보고서, 사업보고서 → get_disclosures
+- 회사 정보, 기업 개황 → get_company_info
+
+### 내부자/지분 (DART)
+- 내부자 거래, 임원 매매 → get_insider_trades
+- 대주주, 지분 변동 → get_major_shareholder
+
+### 시장 정보 (KIS)
+- 상승률 순위 → get_top_gainers
+- 하락률 순위 → get_top_losers
+- 거래량 순위 → get_volume_ranking
+
+### 한국 특화 데이터 (KIS)
+- 외국인/기관 매매, 수급 → get_investor_trends
+- 공매도 → get_short_selling
+- 신용잔고 → get_credit_balance
+- 프로그램 매매 → get_program_trading
+
+적절한 도구를 호출하세요.`;
 }
 
 // Input schema for the financial_search tool
 const FinancialSearchInputSchema = z.object({
-  query: z.string().describe('Natural language query about financial data'),
+  query: z.string().describe('금융 데이터에 대한 자연어 질의'),
 });
 
 /**
- * Create a financial_search tool configured with the specified model.
- * Uses native LLM tool calling for routing queries to finance tools.
+ * 한국 주식 시장용 financial_search 도구 생성
+ * LLM 도구 호출을 사용하여 적절한 금융 도구로 라우팅
  */
 export function createFinancialSearch(model: string): DynamicStructuredTool {
   return new DynamicStructuredTool({
     name: 'financial_search',
-    description: `Intelligent agentic search for financial data. Takes a natural language query and automatically routes to appropriate financial data tools. Use for:
-- Stock prices (current or historical)
-- Company financials (income statements, balance sheets, cash flow)
-- Financial metrics (P/E ratio, market cap, EPS, dividend yield)
-- SEC filings (10-K, 10-Q, 8-K)
-- Analyst estimates and price targets
-- Company news
-- Insider trading activity
-- Cryptocurrency prices`,
+    description: `한국 주식 시장 금융 데이터를 위한 지능형 검색 도구입니다. 자연어 질의를 받아 적절한 금융 데이터 도구로 자동 라우팅합니다. 용도:
+- 주가 (현재가, 과거 시세)
+- 재무제표 (손익계산서, 재무상태표, 현금흐름표)
+- 공시 (사업보고서, 분기보고서, 주요사항보고)
+- 내부자 거래 (임원/주요주주 지분 변동)
+- 시장 순위 (상승률, 하락률, 거래량)
+- 한국 특화 (외국인/기관 매매동향, 공매도, 신용잔고)`,
     schema: FinancialSearchInputSchema,
     func: async (input) => {
       // 1. Call LLM with finance tools bound (native tool calling)
