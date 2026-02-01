@@ -7,22 +7,24 @@
 ## 주요 기능
 
 ### 데이터 소스
+
 - **한국투자증권 (KIS)**: 실시간 시세, 일별 주가, 시장 순위, 투자자별 매매동향, 공매도, 신용잔고
 - **DART**: 재무제표 (손익계산서, 재무상태표, 현금흐름표), 공시 검색, 내부자 거래
 - **네이버**: 한국어 뉴스 검색
 
 ### 지원 기능
-| 기능 | 설명 | 데이터 소스 |
-|------|------|------------|
-| 주가 조회 | 현재가, 과거 시세 | KIS |
-| 재무제표 | 손익계산서, 재무상태표, 현금흐름표 | DART |
-| 공시 검색 | 사업보고서, 분기보고서, 주요사항보고 | DART |
-| 내부자 거래 | 임원/주요주주 지분 변동 | DART |
-| 시장 순위 | 상승률, 하락률, 거래량 순위 | KIS |
-| 투자자 매매동향 | 외국인/기관/개인 수급 | KIS |
-| 공매도 | 공매도량, 공매도잔고 | KIS |
-| 신용잔고 | 신용융자, 대주잔고 | KIS |
-| 뉴스 검색 | 기업/종목 관련 뉴스 | 네이버 |
+
+| 기능            | 설명                                 | 데이터 소스 |
+| --------------- | ------------------------------------ | ----------- |
+| 주가 조회       | 현재가, 과거 시세                    | KIS         |
+| 재무제표        | 손익계산서, 재무상태표, 현금흐름표   | DART        |
+| 공시 검색       | 사업보고서, 분기보고서, 주요사항보고 | DART        |
+| 내부자 거래     | 임원/주요주주 지분 변동              | DART        |
+| 시장 순위       | 상승률, 하락률, 거래량 순위          | KIS         |
+| 투자자 매매동향 | 외국인/기관/개인 수급                | KIS         |
+| 공매도          | 공매도량, 공매도잔고                 | KIS         |
+| 신용잔고        | 신용융자, 대주잔고                   | KIS         |
+| 뉴스 검색       | 기업/종목 관련 뉴스                  | 네이버      |
 
 ## 사전 요구사항
 
@@ -35,17 +37,20 @@
 ## 설치
 
 1. 저장소 클론:
+
 ```bash
-git clone https://github.com/your-repo/dexter-for-korean-market.git
+git clone https://github.com/Baejw0111/dexter-for-korean-market.git
 cd dexter-for-korean-market
 ```
 
 2. 의존성 설치:
+
 ```bash
 bun install
 ```
 
 3. 환경 변수 설정:
+
 ```bash
 cp env.example .env
 ```
@@ -182,19 +187,19 @@ flowchart TB
 
     subgraph Tools[도구]
         Router[Financial Search Router]
-        
+
         subgraph KIS[한국투자증권 API]
             Prices[주가 조회]
             Market[시장 순위]
             KoreaSpecific[투자자동향/공매도/신용]
         end
-        
+
         subgraph DART[DART API]
             Fundamentals[재무제표]
             Disclosures[공시 검색]
             Insider[내부자 거래]
         end
-        
+
         subgraph Naver[네이버 API]
             News[뉴스 검색]
         end
