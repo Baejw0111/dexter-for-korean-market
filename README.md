@@ -67,23 +67,33 @@ DART_API_KEY=your-api-key
 # 네이버 검색 (선택)
 NAVER_CLIENT_ID=your-client-id
 NAVER_CLIENT_SECRET=your-client-secret
-
-# 웹 검색 (선택)
-EXASEARCH_API_KEY=your-api-key
-TAVILY_API_KEY=your-api-key
 ```
 
 ## 실행
 
-인터랙티브 모드:
+### 인터랙티브 모드
+
 ```bash
 bun start
 ```
 
-개발 모드 (watch):
+CLI에서 직접 질문을 입력하고 답변을 받는 모드입니다. 실제 사용 시 이 모드를 사용합니다.
+
+- `>` 프롬프트에서 질문 입력
+- 에이전트가 필요한 도구를 자동으로 선택하여 데이터 조회
+- 결과를 종합하여 답변 생성
+- `exit` 또는 `Ctrl+C`로 종료
+
+### 개발 모드
+
 ```bash
 bun dev
 ```
+
+코드 변경 시 자동으로 재시작되는 watch 모드입니다. 개발 중 사용합니다.
+
+- 파일 변경 감지 시 자동 재실행
+- 빠른 피드백 루프로 개발 효율 향상
 
 ## 사용 예시
 
@@ -120,10 +130,35 @@ SK하이닉스(000660)의 2023년 재무현황입니다.
 
 ## 평가
 
-한국 시장용 평가 데이터셋 실행:
+에이전트의 성능을 측정하는 평가 스위트입니다. LLM-as-judge 방식으로 답변의 정확성을 채점합니다.
+
+### 전체 데이터셋 실행
+
 ```bash
-bun run src/evals/run.ts --dataset finance_agent_kr.csv
+bun run src/evals/run.ts
 ```
+
+### 샘플 실행
+
+```bash
+bun run src/evals/run.ts --sample 10
+```
+
+무작위로 10개 질문만 선택하여 빠르게 테스트합니다.
+
+### 평가 데이터셋
+
+`src/evals/dataset/finance_agent_kr.csv`에 한국 시장용 테스트 질문이 포함되어 있습니다:
+
+- 주가 조회 (삼성전자 현재가, PER 등)
+- 재무제표 분석 (매출, 영업이익, 재무상태)
+- 투자자 매매동향 (외국인, 기관 수급)
+- 공시 검색 및 요약
+- 복합 질문 (비교 분석, 계산)
+
+### 결과 확인
+
+실행 중 실시간으로 진행 상황과 정확도가 표시됩니다.
 
 ## 프로젝트 구조
 
