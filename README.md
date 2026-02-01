@@ -2,6 +2,8 @@
 
 한국 주식 시장 분석을 위한 자율 금융 리서치 에이전트입니다. 한국투자증권 API, DART API, 네이버 검색 API를 활용하여 KOSPI/KOSDAQ 종목에 대한 종합적인 분석을 수행합니다.
 
+> 이 프로젝트는 [virattt/dexter](https://github.com/virattt/dexter)를 포크하여 한국 주식 시장 분석용으로 개조한 것입니다.
+
 ## 주요 기능
 
 ### 데이터 소스
