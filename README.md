@@ -162,6 +162,66 @@ bun run src/evals/run.ts --sample 10
 
 실행 중 실시간으로 진행 상황과 정확도가 표시됩니다.
 
+## 아키텍처
+
+```mermaid
+flowchart TB
+    subgraph Client[클라이언트]
+        CLI[CLI Interface]
+    end
+
+    subgraph Agent[에이전트]
+        Planner[Task Planner]
+        Executor[Tool Executor]
+        Validator[Self Validator]
+    end
+
+    subgraph LLM[LLM]
+        OpenAI[OpenAI API]
+    end
+
+    subgraph Tools[도구]
+        Router[Financial Search Router]
+        
+        subgraph KIS[한국투자증권 API]
+            Prices[주가 조회]
+            Market[시장 순위]
+            KoreaSpecific[투자자동향/공매도/신용]
+        end
+        
+        subgraph DART[DART API]
+            Fundamentals[재무제표]
+            Disclosures[공시 검색]
+            Insider[내부자 거래]
+        end
+        
+        subgraph Naver[네이버 API]
+            News[뉴스 검색]
+        end
+    end
+
+    CLI --> Planner
+    Planner <--> OpenAI
+    Planner --> Executor
+    Executor --> Router
+    Router --> KIS
+    Router --> DART
+    Executor --> Naver
+    KIS --> Validator
+    DART --> Validator
+    Naver --> Validator
+    Validator <--> OpenAI
+    Validator --> CLI
+```
+
+### 동작 흐름
+
+1. **질문 입력**: 사용자가 CLI에서 자연어로 질문
+2. **태스크 계획**: LLM이 질문을 분석하여 필요한 도구와 순서 결정
+3. **도구 실행**: Financial Search Router가 적절한 API 호출
+4. **결과 검증**: 수집된 데이터의 완전성 검증, 필요시 추가 조회
+5. **답변 생성**: 검증된 데이터를 종합하여 최종 답변 생성
+
 ## 프로젝트 구조
 
 ```
