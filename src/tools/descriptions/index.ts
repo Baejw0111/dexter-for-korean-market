@@ -4,3 +4,4 @@
  */
 export { FINANCIAL_SEARCH_DESCRIPTION } from './financial-search.js';
 export { WEB_SEARCH_DESCRIPTION } from './web-search.js';
+export { NEWS_SEARCH_DESCRIPTION } from './news-search.js';
