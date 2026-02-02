@@ -8,7 +8,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as zlib from 'zlib';
+import AdmZip from 'adm-zip';
 
 const BASE_URL = 'https://opendart.fss.or.kr/api';
 const CACHE_FILE = path.join(__dirname, 'corp-code-cache.json');
@@ -79,7 +79,8 @@ async function downloadCorpCodes(): Promise<CorpCodeEntry[]> {
   }
 
   const url = `${BASE_URL}/corpCode.xml?crtfc_key=${apiKey}`;
-  const response = await fetch(url);
+  const { fetchWithLogging } = await import('../../../utils/api-logger.js');
+  const response = await fetchWithLogging('DART', url);
 
   if (!response.ok) {
     throw new Error(`Failed to download corp codes: ${response.status}`);
@@ -90,46 +91,38 @@ async function downloadCorpCodes(): Promise<CorpCodeEntry[]> {
   const buffer = Buffer.from(arrayBuffer);
 
   // ZIP 압축 해제 (단일 XML 파일)
-  const xmlContent = await unzipCorpCodeXml(buffer);
+  const xmlContent = unzipCorpCodeXml(buffer);
 
   // XML 파싱
   return parseCorpCodeXml(xmlContent);
 }
 
 /**
- * ZIP 압축 해제
+ * ZIP 압축 해제 (adm-zip 사용)
  */
-async function unzipCorpCodeXml(buffer: Buffer): Promise<string> {
-  return new Promise((resolve, reject) => {
-    // DART의 corpCode.xml은 ZIP 형식으로 제공됨
-    // 간단한 ZIP 파싱 (단일 파일)
-    try {
-      // ZIP 파일 시그니처 확인 (PK)
-      if (buffer[0] === 0x50 && buffer[1] === 0x4b) {
-        // Local file header 파싱
-        const compressedSize = buffer.readUInt32LE(18);
-        const fileNameLength = buffer.readUInt16LE(26);
-        const extraFieldLength = buffer.readUInt16LE(28);
+function unzipCorpCodeXml(buffer: Buffer): string {
+  // ZIP 파일 시그니처 확인 (PK)
+  if (buffer[0] === 0x50 && buffer[1] === 0x4b) {
+    const zip = new AdmZip(buffer);
+    const entries = zip.getEntries();
 
-        const dataStart = 30 + fileNameLength + extraFieldLength;
-        const compressedData = buffer.slice(dataStart, dataStart + compressedSize);
-
-        // Deflate 압축 해제
-        zlib.inflateRaw(compressedData, (err, result) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(result.toString('utf-8'));
-          }
-        });
-      } else {
-        // 압축되지 않은 경우
-        resolve(buffer.toString('utf-8'));
+    // CORPCODE.xml 파일 찾기
+    for (const entry of entries) {
+      if (entry.entryName.toLowerCase().endsWith('.xml')) {
+        return entry.getData().toString('utf-8');
       }
-    } catch (error) {
-      reject(error);
     }
-  });
+
+    // XML 파일을 찾지 못한 경우 첫 번째 엔트리 반환
+    if (entries.length > 0) {
+      return entries[0].getData().toString('utf-8');
+    }
+
+    throw new Error('No XML file found in ZIP archive');
+  }
+
+  // 압축되지 않은 경우
+  return buffer.toString('utf-8');
 }
 
 /**
