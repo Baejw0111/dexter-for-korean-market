@@ -97,14 +97,13 @@ const FinancialStatementsInputSchema = z.object({
   ticker: z
     .string()
     .describe('종목코드 (6자리) 또는 회사명. 예: "005930" 또는 "삼성전자"'),
-  year: z
-    .string()
-    .optional()
-    .describe('사업연도 (YYYY). 생략시 최근 연도'),
+  year: z.string().optional().describe('사업연도 (YYYY). 생략시 최근 연도'),
   report_type: z
     .enum(['annual', 'q1', 'q2', 'q3'])
     .default('annual')
-    .describe('보고서 유형 (annual: 사업보고서, q1: 1분기, q2: 반기, q3: 3분기)'),
+    .describe(
+      '보고서 유형 (annual: 사업보고서, q1: 1분기, q2: 반기, q3: 3분기)'
+    ),
   fs_type: z
     .enum(['consolidated', 'separate'])
     .default('consolidated')
@@ -165,19 +164,26 @@ export const getIncomeStatements = new DynamicStructuredTool({
   func: async (input) => {
     const corpCode = await getCorpCode(input.ticker);
     if (!corpCode) {
-      return formatToolResult({ error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` }, []);
+      return formatToolResult(
+        { error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` },
+        []
+      );
     }
 
     const year = input.year || getBusinessYear(0);
     const reprtCode = getReportCode(input.report_type);
-    const fsDiv = input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
+    const fsDiv =
+      input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
 
-    const { data, url } = await callDartApi<{ list: FinancialAccountItem[] }>('/fnlttSinglAcnt.json', {
-      corp_code: corpCode,
-      bsns_year: year,
-      reprt_code: reprtCode,
-      fs_div: fsDiv,
-    });
+    const { data, url } = await callDartApi<{ list: FinancialAccountItem[] }>(
+      '/fnlttSinglAcnt.json',
+      {
+        corp_code: corpCode,
+        bsns_year: year,
+        reprt_code: reprtCode,
+        fs_div: fsDiv,
+      }
+    );
 
     // 손익계산서 항목만 필터링 (IS)
     const incomeItems = filterByStatementType(data.list || [], 'IS');
@@ -210,19 +216,26 @@ export const getBalanceSheets = new DynamicStructuredTool({
   func: async (input) => {
     const corpCode = await getCorpCode(input.ticker);
     if (!corpCode) {
-      return formatToolResult({ error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` }, []);
+      return formatToolResult(
+        { error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` },
+        []
+      );
     }
 
     const year = input.year || getBusinessYear(0);
     const reprtCode = getReportCode(input.report_type);
-    const fsDiv = input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
+    const fsDiv =
+      input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
 
-    const { data, url } = await callDartApi<{ list: FinancialAccountItem[] }>('/fnlttSinglAcnt.json', {
-      corp_code: corpCode,
-      bsns_year: year,
-      reprt_code: reprtCode,
-      fs_div: fsDiv,
-    });
+    const { data, url } = await callDartApi<{ list: FinancialAccountItem[] }>(
+      '/fnlttSinglAcnt.json',
+      {
+        corp_code: corpCode,
+        bsns_year: year,
+        reprt_code: reprtCode,
+        fs_div: fsDiv,
+      }
+    );
 
     // 재무상태표 항목만 필터링 (BS)
     const balanceItems = filterByStatementType(data.list || [], 'BS');
@@ -255,19 +268,26 @@ export const getCashFlowStatements = new DynamicStructuredTool({
   func: async (input) => {
     const corpCode = await getCorpCode(input.ticker);
     if (!corpCode) {
-      return formatToolResult({ error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` }, []);
+      return formatToolResult(
+        { error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` },
+        []
+      );
     }
 
     const year = input.year || getBusinessYear(0);
     const reprtCode = getReportCode(input.report_type);
-    const fsDiv = input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
+    const fsDiv =
+      input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
 
-    const { data, url } = await callDartApi<{ list: FinancialAccountItem[] }>('/fnlttSinglAcnt.json', {
-      corp_code: corpCode,
-      bsns_year: year,
-      reprt_code: reprtCode,
-      fs_div: fsDiv,
-    });
+    const { data, url } = await callDartApi<{ list: FinancialAccountItem[] }>(
+      '/fnlttSinglAcnt.json',
+      {
+        corp_code: corpCode,
+        bsns_year: year,
+        reprt_code: reprtCode,
+        fs_div: fsDiv,
+      }
+    );
 
     // 현금흐름표 항목만 필터링 (CF)
     const cashFlowItems = filterByStatementType(data.list || [], 'CF');
@@ -300,19 +320,26 @@ export const getAllFinancialStatements = new DynamicStructuredTool({
   func: async (input) => {
     const corpCode = await getCorpCode(input.ticker);
     if (!corpCode) {
-      return formatToolResult({ error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` }, []);
+      return formatToolResult(
+        { error: `종목코드 또는 회사명을 찾을 수 없습니다: ${input.ticker}` },
+        []
+      );
     }
 
     const year = input.year || getBusinessYear(0);
     const reprtCode = getReportCode(input.report_type);
-    const fsDiv = input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
+    const fsDiv =
+      input.fs_type === 'consolidated' ? FS_DIV.CONSOLIDATED : FS_DIV.SEPARATE;
 
-    const { data, url } = await callDartApi<{ list: FullFinancialItem[] }>('/fnlttSinglAcntAll.json', {
-      corp_code: corpCode,
-      bsns_year: year,
-      reprt_code: reprtCode,
-      fs_div: fsDiv,
-    });
+    const { data, url } = await callDartApi<{ list: FullFinancialItem[] }>(
+      '/fnlttSinglAcntAll.json',
+      {
+        corp_code: corpCode,
+        bsns_year: year,
+        reprt_code: reprtCode,
+        fs_div: fsDiv,
+      }
+    );
 
     const items = data.list || [];
 
@@ -327,7 +354,10 @@ export const getAllFinancialStatements = new DynamicStructuredTool({
     }
 
     // 포맷팅
-    const result: Record<string, Array<{ 계정명: string; 당기: string; 전기: string }>> = {};
+    const result: Record<
+      string,
+      Array<{ 계정명: string; 당기: string; 전기: string }>
+    > = {};
     for (const [key, groupItems] of Object.entries(grouped)) {
       result[key] = groupItems.map((item) => ({
         계정명: item.account_nm,
@@ -343,6 +373,170 @@ export const getAllFinancialStatements = new DynamicStructuredTool({
         보고서: input.report_type,
         재무제표: input.fs_type,
         ...result,
+      },
+      [url]
+    );
+  },
+});
+
+// ============================================================
+// DS003 재무지표 API (추가)
+// ============================================================
+
+/**
+ * 주요재무지표 응답 항목
+ */
+interface FinancialRatioItem {
+  rcept_no: string;
+  bsns_year: string;
+  corp_code: string;
+  sj_div: string;
+  sj_nm: string;
+  account_id: string;
+  account_nm: string;
+  account_detail: string;
+  thstrm_nm: string;
+  thstrm_dt: string;
+  frmtrm_nm: string;
+  frmtrm_dt: string;
+  bfefrmtrm_nm: string;
+  bfefrmtrm_dt: string;
+}
+
+const FinancialRatioInputSchema = z.object({
+  ticker: z.string().describe('종목코드 (6자리) 또는 회사명'),
+  year: z.string().optional().describe('사업연도 (YYYY). 생략시 최근 연도'),
+  report_type: z
+    .enum(['annual', 'q1', 'q2', 'q3'])
+    .default('annual')
+    .describe('보고서 유형'),
+});
+
+/**
+ * DART 주요재무지표 조회
+ */
+export const getDartFinancialRatios = new DynamicStructuredTool({
+  name: 'get_dart_financial_ratios',
+  description: `DART 기준 주요재무지표를 조회합니다. ROE, ROA, 부채비율, 유동비율 등 핵심 지표.
+사용 시점: DART 공식 재무지표, 투자지표 분석이 필요할 때
+키워드: 재무지표, ROE, ROA, 부채비율, 유동비율, EPS, BPS, 영업이익률`,
+  schema: FinancialRatioInputSchema,
+  func: async (input) => {
+    const corpCode = await getCorpCode(input.ticker);
+    if (!corpCode) {
+      return formatToolResult(
+        { error: `종목을 찾을 수 없습니다: ${input.ticker}` },
+        []
+      );
+    }
+
+    const year = input.year || getBusinessYear(0);
+    const reprtCode = getReportCode(input.report_type);
+
+    const { data, url } = await callDartApi<{ list: FinancialRatioItem[] }>(
+      '/fnlttSinglIndx.json',
+      {
+        corp_code: corpCode,
+        bsns_year: year,
+        reprt_code: reprtCode,
+        idx_cl_code: '0', // 전체
+      }
+    );
+
+    const items = data.list || [];
+
+    const ratios = items.map((item) => ({
+      지표명: item.account_nm,
+      지표상세: item.account_detail,
+      당기: item.thstrm_dt,
+      전기: item.frmtrm_dt,
+      전전기: item.bfefrmtrm_dt,
+    }));
+
+    return formatToolResult(
+      {
+        종목: input.ticker,
+        사업연도: year,
+        보고서: input.report_type,
+        주요재무지표: ratios,
+      },
+      [url]
+    );
+  },
+});
+
+const MultiCompanyRatioInputSchema = z.object({
+  tickers: z.array(z.string()).describe('종목코드 배열 (최대 100개)'),
+  year: z.string().optional().describe('사업연도 (YYYY)'),
+  report_type: z
+    .enum(['annual', 'q1', 'q2', 'q3'])
+    .default('annual')
+    .describe('보고서 유형'),
+});
+
+/**
+ * 다중회사 주요재무지표 조회
+ */
+export const getMultiCompanyFinancialRatios = new DynamicStructuredTool({
+  name: 'get_multi_company_financial_ratios',
+  description: `여러 회사의 주요재무지표를 한 번에 조회합니다 (최대 100개).
+사용 시점: 여러 기업 재무지표 비교, 동종업계 비교 분석이 필요할 때
+키워드: 다중회사, 비교분석, 동종업계비교, 재무비교, 멀티컴퍼니`,
+  schema: MultiCompanyRatioInputSchema,
+  func: async (input) => {
+    const tickers = input.tickers.slice(0, 100);
+    const year = input.year || getBusinessYear(0);
+    const reprtCode = getReportCode(input.report_type);
+
+    // 종목코드 → 고유번호 변환
+    const corpCodes: string[] = [];
+    for (const ticker of tickers) {
+      const code = await getCorpCode(ticker);
+      if (code) {
+        corpCodes.push(code);
+      }
+    }
+
+    if (corpCodes.length === 0) {
+      return formatToolResult({ error: '유효한 종목이 없습니다' }, []);
+    }
+
+    const { data, url } = await callDartApi<{ list: FinancialRatioItem[] }>(
+      '/fnlttMultiIndx.json',
+      {
+        corp_code: corpCodes.join(','),
+        bsns_year: year,
+        reprt_code: reprtCode,
+        idx_cl_code: '0',
+      }
+    );
+
+    const items = data.list || [];
+
+    // 회사별로 그룹화
+    const grouped: Record<string, FinancialRatioItem[]> = {};
+    for (const item of items) {
+      if (!grouped[item.corp_code]) {
+        grouped[item.corp_code] = [];
+      }
+      grouped[item.corp_code].push(item);
+    }
+
+    const result = Object.entries(grouped).map(([code, ratioItems]) => ({
+      고유번호: code,
+      지표: ratioItems.map((item) => ({
+        지표명: item.account_nm,
+        당기: item.thstrm_dt,
+        전기: item.frmtrm_dt,
+      })),
+    }));
+
+    return formatToolResult(
+      {
+        조회종목수: corpCodes.length,
+        사업연도: year,
+        보고서: input.report_type,
+        회사별재무지표: result,
       },
       [url]
     );
