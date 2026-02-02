@@ -1,4 +1,7 @@
-import { DynamicStructuredTool, StructuredToolInterface } from '@langchain/core/tools';
+import {
+  DynamicStructuredTool,
+  StructuredToolInterface,
+} from '@langchain/core/tools';
 import { AIMessage, ToolCall } from '@langchain/core/messages';
 import { z } from 'zod';
 import { callLlm } from '../../model/llm.js';
@@ -11,8 +14,85 @@ import { getCurrentDate } from '../../agent/prompts.js';
 import { getPriceSnapshot, getPrices } from './kis/prices.js';
 // KIS 시장 정보
 import { getTopGainers, getTopLosers, getVolumeRanking } from './kis/market.js';
+// KIS 순위/랭킹
+import {
+  getMarketCapRanking,
+  getTradingValueRanking,
+  getNewHighLowRanking,
+  getDisparityRanking,
+  getVolumePowerRanking,
+  getQuoteBalanceRanking,
+  getOvertimeFluctRanking,
+  getOvertimeVolumeRanking,
+  getExpectedPriceRanking,
+  getPerRanking,
+  getPbrRanking,
+} from './kis/ranking.js';
+// KIS 시세/호가/체결
+import {
+  getPriceDetail,
+  getAskingPrice,
+  getConclusions,
+  getTimeChart,
+  getOvertimePrice,
+  getOvertimeAskingPrice,
+  getExpectedPrice,
+  getMarketStatus,
+  getViStatus,
+  getMultiPrice,
+  getDailyTradeVolume,
+  getHolidays,
+} from './kis/quotes.js';
+// KIS 재무/기업정보
+import {
+  getKisBalanceSheet,
+  getKisIncomeStatement,
+  getFinancialRatio,
+  getProfitRatio,
+  getStabilityRatio,
+  getGrowthRatio,
+  getStockInfo,
+  searchStocks,
+} from './kis/fundamentals.js';
+// KIS 투자자동향/수급
+import {
+  getInvestorDailyByMarket,
+  getInvestorTimeByMarket,
+  getForeignInstitutionTotal,
+  getForeignTradingTrend,
+  getMemberTrading,
+  getMemberDaily,
+  getInvestorEstimate,
+} from './kis/investor.js';
+// KIS 기업이벤트/KSD
+import {
+  getKsdDividend,
+  getKsdBonusIssue,
+  getKsdRightsIssue,
+  getKsdCapitalDecrease,
+  getKsdMergerSplit,
+  getKsdShareholderMeeting,
+  getKsdListingInfo,
+  getDividendYieldRanking,
+  getPeriodRights,
+} from './kis/corporate-events.js';
+// KIS 지수
+import {
+  getIndexPrice,
+  getIndexDailyPrice,
+  getIndexTimePrice,
+  getSectorPriceList,
+  getSectorDailyChart,
+  getIndexProgramTrading,
+  getMarketIndices,
+} from './kis/index-prices.js';
 // KIS 한국 특화
-import { getInvestorTrends, getCreditBalance, getShortSelling, getProgramTrading } from './kis/korea-specific.js';
+import {
+  getInvestorTrends,
+  getCreditBalance,
+  getShortSelling,
+  getProgramTrading,
+} from './kis/korea-specific.js';
 
 // DART 재무제표
 import {
@@ -20,11 +100,34 @@ import {
   getBalanceSheets,
   getCashFlowStatements,
   getAllFinancialStatements,
+  getDartFinancialRatios,
+  getMultiCompanyFinancialRatios,
 } from './dart/fundamentals.js';
 // DART 공시
 import { getDisclosures, getCompanyInfo } from './dart/disclosures.js';
 // DART 내부자 거래
 import { getInsiderTrades, getMajorShareholder } from './dart/insider.js';
+// DART 상장사 목록
+import { getListedCompanies } from './dart/listing.js';
+// DART 재무 스크리닝
+import { screenFinancials } from './dart/screening.js';
+// DART 정기보고서 주요정보 (DS002)
+import {
+  getCapitalChange,
+  getDividendInfo,
+  getTreasuryStock,
+  getLargestShareholder,
+  getLargestShareholderChange,
+  getMinorityShareholder,
+  getTotalShares,
+  getExecutives,
+  getEmployees,
+  getOutsideDirectors,
+  getExecutiveCompensationTotal,
+  getExecutiveCompensationIndividual,
+  getAuditorOpinion,
+  getSubsidiaryInvestment,
+} from './dart/periodic-report.js';
 
 // 한국 시장용 금융 도구 목록
 const FINANCE_TOOLS: StructuredToolInterface[] = [
@@ -35,6 +138,66 @@ const FINANCE_TOOLS: StructuredToolInterface[] = [
   getTopGainers,
   getTopLosers,
   getVolumeRanking,
+  // === 순위/랭킹 (KIS) ===
+  getMarketCapRanking,
+  getTradingValueRanking,
+  getNewHighLowRanking,
+  getDisparityRanking,
+  getVolumePowerRanking,
+  getQuoteBalanceRanking,
+  getOvertimeFluctRanking,
+  getOvertimeVolumeRanking,
+  getExpectedPriceRanking,
+  getPerRanking,
+  getPbrRanking,
+  // === 시세/호가/체결 (KIS) ===
+  getPriceDetail,
+  getAskingPrice,
+  getConclusions,
+  getTimeChart,
+  getOvertimePrice,
+  getOvertimeAskingPrice,
+  getExpectedPrice,
+  getMarketStatus,
+  getViStatus,
+  getMultiPrice,
+  getDailyTradeVolume,
+  getHolidays,
+  // === 재무/기업정보 (KIS) ===
+  getKisBalanceSheet,
+  getKisIncomeStatement,
+  getFinancialRatio,
+  getProfitRatio,
+  getStabilityRatio,
+  getGrowthRatio,
+  getStockInfo,
+  searchStocks,
+  // === 투자자동향/수급 (KIS) ===
+  getInvestorDailyByMarket,
+  getInvestorTimeByMarket,
+  getForeignInstitutionTotal,
+  getForeignTradingTrend,
+  getMemberTrading,
+  getMemberDaily,
+  getInvestorEstimate,
+  // === 기업이벤트/KSD (KIS) ===
+  getKsdDividend,
+  getKsdBonusIssue,
+  getKsdRightsIssue,
+  getKsdCapitalDecrease,
+  getKsdMergerSplit,
+  getKsdShareholderMeeting,
+  getKsdListingInfo,
+  getDividendYieldRanking,
+  getPeriodRights,
+  // === 지수 (KIS) ===
+  getIndexPrice,
+  getIndexDailyPrice,
+  getIndexTimePrice,
+  getSectorPriceList,
+  getSectorDailyChart,
+  getIndexProgramTrading,
+  getMarketIndices,
   // === 한국 특화 (KIS) ===
   getInvestorTrends,
   getCreditBalance,
@@ -45,19 +208,47 @@ const FINANCE_TOOLS: StructuredToolInterface[] = [
   getBalanceSheets,
   getCashFlowStatements,
   getAllFinancialStatements,
+  getDartFinancialRatios,
+  getMultiCompanyFinancialRatios,
   // === 공시 (DART) ===
   getDisclosures,
   getCompanyInfo,
   // === 내부자 거래 (DART) ===
   getInsiderTrades,
   getMajorShareholder,
+  // === 상장사 목록 및 스크리닝 (DART) ===
+  getListedCompanies,
+  screenFinancials,
+  // === 정기보고서 주요정보 (DART DS002) ===
+  getCapitalChange,
+  getDividendInfo,
+  getTreasuryStock,
+  getLargestShareholder,
+  getLargestShareholderChange,
+  getMinorityShareholder,
+  getTotalShares,
+  getExecutives,
+  getEmployees,
+  getOutsideDirectors,
+  getExecutiveCompensationTotal,
+  getExecutiveCompensationIndividual,
+  getAuditorOpinion,
+  getSubsidiaryInvestment,
 ];
 
 // Create a map for quick tool lookup by name
-const FINANCE_TOOL_MAP = new Map(FINANCE_TOOLS.map(t => [t.name, t]));
+const FINANCE_TOOL_MAP = new Map(FINANCE_TOOLS.map((t) => [t.name, t]));
 
-// Build the router system prompt - 한국 시장용
+/**
+ * 동적으로 도구 목록을 생성하여 라우터 프롬프트 빌드
+ * 도구의 description에서 자동으로 가이드 생성
+ */
 function buildRouterPrompt(): string {
+  // 도구 목록을 카테고리별로 그룹화
+  const toolDescriptions = FINANCE_TOOLS.map(
+    (tool) => `- ${tool.name}: ${tool.description}`
+  ).join('\n');
+
   return `당신은 한국 주식 시장 금융 데이터 라우팅 어시스턴트입니다.
 현재 날짜: ${getCurrentDate()}
 
@@ -90,38 +281,11 @@ function buildRouterPrompt(): string {
 - "올해" → start_date 1월 1일
 - "작년" → 전년도
 
-## 도구 선택 가이드
+## 사용 가능한 도구
 
-### 주가 데이터
-- 현재가, 시세 → get_price_snapshot
-- 과거 주가, 차트 → get_prices
+${toolDescriptions}
 
-### 재무제표 (DART)
-- 매출, 영업이익, 순이익 → get_income_statements
-- 자산, 부채, 자본 → get_balance_sheets
-- 현금흐름 → get_cash_flow_statements
-- 종합 재무분석 → get_all_financial_statements
-
-### 공시 (DART)
-- 공시, 보고서, 사업보고서 → get_disclosures
-- 회사 정보, 기업 개황 → get_company_info
-
-### 내부자/지분 (DART)
-- 내부자 거래, 임원 매매 → get_insider_trades
-- 대주주, 지분 변동 → get_major_shareholder
-
-### 시장 정보 (KIS)
-- 상승률 순위 → get_top_gainers
-- 하락률 순위 → get_top_losers
-- 거래량 순위 → get_volume_ranking
-
-### 한국 특화 데이터 (KIS)
-- 외국인/기관 매매, 수급 → get_investor_trends
-- 공매도 → get_short_selling
-- 신용잔고 → get_credit_balance
-- 프로그램 매매 → get_program_trading
-
-적절한 도구를 호출하세요.`;
+적절한 도구를 호출하세요. 질문에 가장 적합한 도구를 선택하고, 필요한 파라미터를 추론하세요.`;
 }
 
 // Input schema for the financial_search tool
@@ -146,11 +310,11 @@ export function createFinancialSearch(model: string): DynamicStructuredTool {
     schema: FinancialSearchInputSchema,
     func: async (input) => {
       // 1. Call LLM with finance tools bound (native tool calling)
-      const response = await callLlm(input.query, {
+      const response = (await callLlm(input.query, {
         model,
         systemPrompt: buildRouterPrompt(),
         tools: FINANCE_TOOLS,
-      }) as AIMessage;
+      })) as AIMessage;
 
       // 2. Check for tool calls
       const toolCalls = response.tool_calls as ToolCall[];
@@ -167,7 +331,10 @@ export function createFinancialSearch(model: string): DynamicStructuredTool {
               throw new Error(`Tool '${tc.name}' not found`);
             }
             const rawResult = await tool.invoke(tc.args);
-            const result = typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult);
+            const result =
+              typeof rawResult === 'string'
+                ? rawResult
+                : JSON.stringify(rawResult);
             const parsed = JSON.parse(result);
             return {
               tool: tc.name,
@@ -200,7 +367,9 @@ export function createFinancialSearch(model: string): DynamicStructuredTool {
 
       for (const result of successfulResults) {
         // Use tool name as key, or tool_ticker for multiple calls to same tool
-        const ticker = (result.args as Record<string, unknown>).ticker as string | undefined;
+        const ticker = (result.args as Record<string, unknown>).ticker as
+          | string
+          | undefined;
         const key = ticker ? `${result.tool}_${ticker}` : result.tool;
         combinedData[key] = result.data;
       }
