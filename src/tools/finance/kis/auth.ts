@@ -9,6 +9,7 @@ import {
   removeToken,
   type StoredToken,
 } from '../../../utils/token-store.js';
+import { fetchWithLogging } from '../../../utils/api-logger.js';
 
 const PROVIDER_ID = 'kis';
 
@@ -42,7 +43,7 @@ async function issueToken(): Promise<StoredToken> {
     throw new Error('KIS_APP_KEY and KIS_APP_SECRET must be set');
   }
 
-  const response = await fetch(`${baseUrl}/oauth2/tokenP`, {
+  const response = await fetchWithLogging('KIS', `${baseUrl}/oauth2/tokenP`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

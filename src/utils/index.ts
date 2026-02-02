@@ -27,3 +27,5 @@ export {
   getOrRefreshToken,
 } from './token-store.js';
 export type { StoredToken } from './token-store.js';
+export { apiLogger, fetchWithLogging } from './api-logger.js';
+export type { ApiProvider, ApiRequestLog, ApiResponseLog, ApiErrorLog } from './api-logger.js';

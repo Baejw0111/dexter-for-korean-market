@@ -6,6 +6,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z, type ZodType } from 'zod';
 import { formatToolResult } from '../types.js';
+import { fetchWithLogging } from '../../utils/api-logger.js';
 
 // Input schema 정의
 const NaverNewsInputSchema = z.object({
@@ -54,7 +55,7 @@ async function searchNaverNews(
   url.searchParams.append('display', String(Math.min(display, 100)));
   url.searchParams.append('sort', sort);
 
-  const response = await fetch(url.toString(), {
+  const response = await fetchWithLogging('NAVER', url.toString(), {
     headers: {
       'X-Naver-Client-Id': clientId,
       'X-Naver-Client-Secret': clientSecret,

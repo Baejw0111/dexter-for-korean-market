@@ -4,6 +4,7 @@
  */
 
 import { getAccessToken, getBaseUrl } from './auth';
+import { fetchWithLogging } from '../../../utils/api-logger.js';
 
 export interface KISApiResponse<T = Record<string, unknown>> {
   data: T;
@@ -67,7 +68,7 @@ export async function callKisApi<T = Record<string, unknown>>(
     body = JSON.stringify(params);
   }
 
-  const response = await fetch(url.toString(), {
+  const response = await fetchWithLogging('KIS', url.toString(), {
     method,
     headers,
     body,

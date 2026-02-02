@@ -3,6 +3,8 @@
  * @see https://opendart.fss.or.kr/guide/main.do
  */
 
+import { fetchWithLogging } from '../../../utils/api-logger.js';
+
 const BASE_URL = 'https://opendart.fss.or.kr/api';
 
 export interface DartApiResponse<T = Record<string, unknown>> {
@@ -47,7 +49,7 @@ export async function callDartApi<T = Record<string, unknown>>(
     }
   }
 
-  const response = await fetch(url.toString());
+  const response = await fetchWithLogging('DART', url.toString());
 
   if (!response.ok) {
     throw new Error(`DART API request failed: ${response.status} ${response.statusText}`);
