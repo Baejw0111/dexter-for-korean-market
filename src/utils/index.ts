@@ -17,3 +17,13 @@ export type { CursorContext } from './input-key-handlers.js';
 export { getToolDescription } from './tool-description.js';
 export { transformMarkdownTables, formatResponse } from './markdown-table.js';
 export { estimateTokens, TOKEN_BUDGET } from './tokens.js';
+export {
+  saveToken,
+  getToken,
+  isTokenValid,
+  removeToken,
+  clearAllTokens,
+  getTokenInfo,
+  getOrRefreshToken,
+} from './token-store.js';
+export type { StoredToken } from './token-store.js';
