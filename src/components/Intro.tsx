@@ -17,7 +17,7 @@ export function Intro({ provider, model }: IntroProps) {
   const padding = Math.floor((introWidth - fullText.length - 2) / 2);
 
   return (
-    <Box flexDirection="column" marginTop={2}>
+    <Box flexDirection='column' marginTop={2}>
       <Text color={colors.primary}>{'═'.repeat(introWidth)}</Text>
       <Text color={colors.primary}>
         ║{' '.repeat(padding)}
@@ -39,11 +39,15 @@ export function Intro({ provider, model }: IntroProps) {
         </Text>
       </Box>
 
-      <Box marginY={1} flexDirection="column">
+      <Box marginY={1} flexDirection='column'>
         <Text>Your AI assistant for deep financial research.</Text>
-        <Text color={colors.muted}>Current model: <Text color={colors.primary}>{model}</Text></Text>
+        <Text color={colors.muted}>
+          Current model: <Text color={colors.primary}>{model}</Text>
+        </Text>
         {/* <Text color={colors.muted}>Current provider: <Text color={colors.primary}>{getProviderDisplayName(provider)}</Text></Text> */}
-        <Text color={colors.muted}>Type /model to change the provider.</Text>
+        <Text color={colors.muted}>
+          Type /model to change the provider, /debug to toggle debug panel.
+        </Text>
       </Box>
     </Box>
   );

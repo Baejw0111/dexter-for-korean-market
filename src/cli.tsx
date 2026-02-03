@@ -3,7 +3,7 @@
  * CLI - Real-time agentic loop interface
  * Shows tool calls and progress in Claude Code style
  */
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Box, Text, useApp, useInput } from 'ink';
 import { config } from 'dotenv';
 
@@ -27,6 +27,9 @@ config({ quiet: true });
 
 export function CLI() {
   const { exit } = useApp();
+
+  // Debug panel visibility state
+  const [showDebug, setShowDebug] = useState(false);
 
   // Ref to hold setError - avoids TDZ issue since useModelSelection needs to call
   // setError but useAgentRunner (which provides setError) depends on useModelSelection's outputs
@@ -99,6 +102,12 @@ export function CLI() {
       // Handle model selection command
       if (query === '/model') {
         startSelection();
+        return;
+      }
+
+      // Handle debug toggle command
+      if (query === '/debug') {
+        setShowDebug((prev) => !prev);
         return;
       }
 
@@ -231,8 +240,8 @@ export function CLI() {
         />
       </Box>
 
-      {/* Debug Panel - set show={false} to hide */}
-      <DebugPanel maxLines={8} show={true} />
+      {/* Debug Panel - toggle with /debug command */}
+      <DebugPanel maxLines={8} show={showDebug} />
     </Box>
   );
 }
