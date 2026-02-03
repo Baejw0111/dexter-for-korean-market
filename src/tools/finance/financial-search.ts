@@ -254,9 +254,41 @@ function buildRouterPrompt(): string {
 
 사용자의 자연어 쿼리를 분석하여 적절한 금융 도구를 호출하세요.
 
+## 중요: 모호한 쿼리 처리
+
+쿼리가 다음 중 하나라도 해당하면, 도구를 호출하지 말고 **명확화 질문**을 텍스트로 반환하세요:
+
+1. **시장/지수 범위 불명확**: "시장 동향", "전망" 같은 광범위한 질문
+   → "어떤 데이터가 필요하신가요?" 질문과 함께 선택지 제시:
+   - 지수 현황 (코스피/코스닥/코스피200)
+   - 업종별 등락률
+   - 시장 전체 수급 (외국인/기관/개인)
+   - 상승률/하락률 상위 종목
+
+2. **시간 범위 불명확**: 기간이 필요한데 명시되지 않은 경우
+   → "기간을 지정해주세요: 오늘/최근 1주/최근 1개월/최근 3개월"
+
+3. **종목 특정 불가**: 종목명 없이 재무/주가 질문
+   → "어떤 종목의 정보가 필요하신가요?"
+
+4. **데이터 유형 불명확**: "분석해줘", "알려줘" 같은 포괄적 요청
+   → "어떤 데이터를 조회할까요?" 질문과 함께 구체적 선택지 제시
+
+명확화 질문 형식:
+"[질문 내용]
+
+선택지:
+1. [옵션1]
+2. [옵션2]
+3. [옵션3]
+
+원하시는 항목을 선택하거나, 더 구체적으로 질문해주세요."
+
 ## 종목코드 변환
 
-한국 주식은 6자리 숫자 종목코드를 사용합니다:
+한국 주식은 6자리 종목코드를 사용합니다.
+
+### 일반 주식 (6자리 숫자)
 - 삼성전자 → 005930
 - SK하이닉스 → 000660
 - 현대차 → 005380
@@ -273,6 +305,17 @@ function buildRouterPrompt(): string {
 - 삼성바이오로직스 → 207940
 - LG에너지솔루션 → 373220
 
+### ETF/ETN (영문자 포함 가능)
+ETF/ETN 종목코드는 숫자+영문자 조합일 수 있습니다:
+- KODEX 200 → 069500
+- TIGER 200 → 102110
+- KODEX 레버리지 → 122630
+- KODEX 인버스 → 114800
+- KODEX 미국머니마켓액티브 → 0048J0
+- TIGER 미국나스닥100 → 133690
+
+**중요**: ETF 종목코드를 모르면 searchStocks 도구로 검색하거나, 사용자에게 종목코드 확인을 요청하세요.
+
 ## 날짜 변환
 
 상대 날짜를 YYYYMMDD 형식으로 변환:
@@ -285,7 +328,11 @@ function buildRouterPrompt(): string {
 
 ${toolDescriptions}
 
-적절한 도구를 호출하세요. 질문에 가장 적합한 도구를 선택하고, 필요한 파라미터를 추론하세요.`;
+## 행동 규칙
+
+1. 쿼리가 명확하면 → 적절한 도구 호출
+2. 쿼리가 모호하면 → 도구 호출 없이 명확화 질문 텍스트 반환
+3. 여러 데이터가 필요하면 → 여러 도구를 병렬로 호출`;
 }
 
 // Input schema for the financial_search tool
@@ -319,7 +366,31 @@ export function createFinancialSearch(model: string): DynamicStructuredTool {
       // 2. Check for tool calls
       const toolCalls = response.tool_calls as ToolCall[];
       if (!toolCalls || toolCalls.length === 0) {
-        return formatToolResult({ error: 'No tools selected for query' }, []);
+        // LLM이 도구 대신 명확화 질문을 반환한 경우
+        const clarificationMessage =
+          typeof response.content === 'string'
+            ? response.content
+            : Array.isArray(response.content)
+            ? response.content
+                .filter((c) => c.type === 'text')
+                .map((c) => (c as { type: 'text'; text: string }).text)
+                .join('\n')
+            : '';
+
+        if (clarificationMessage) {
+          return formatToolResult(
+            {
+              clarification_needed: true,
+              message: clarificationMessage,
+            },
+            []
+          );
+        }
+
+        return formatToolResult(
+          { error: '쿼리에 적합한 도구를 찾지 못했습니다.' },
+          []
+        );
       }
 
       // 3. Execute tool calls in parallel

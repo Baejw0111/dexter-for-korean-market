@@ -127,11 +127,11 @@ interface StockSearchItem {
 // ============================================================
 
 const TickerInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
 });
 
 const FinancialInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
   count: z.number().default(4).describe('조회 기간 수 (분기 수)'),
 });
 

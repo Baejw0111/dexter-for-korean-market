@@ -75,12 +75,15 @@ interface ShortSellingItem {
 }
 
 const StockInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
 });
 
 const StockDateRangeInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
-  start_date: z.string().optional().describe('시작일 (YYYYMMDD). 생략시 30일 전'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
+  start_date: z
+    .string()
+    .optional()
+    .describe('시작일 (YYYYMMDD). 생략시 30일 전'),
   end_date: z.string().optional().describe('종료일 (YYYYMMDD). 생략시 오늘'),
 });
 
@@ -219,7 +222,9 @@ export const getShortSelling = new DynamicStructuredTool({
       .map((item) => ({
         일자: item.stck_bsop_date,
         공매도량: Number(item.ssts_cntg_qty || 0).toLocaleString('ko-KR'),
-        공매도금액: `${(Number(item.ssts_cntg_amt || 0) / 100000000).toFixed(1)}억원`,
+        공매도금액: `${(Number(item.ssts_cntg_amt || 0) / 100000000).toFixed(
+          1
+        )}억원`,
         공매도비중: `${item.ssts_vol_rlim || 0}%`,
         거래량: Number(item.acml_vol || 0).toLocaleString('ko-KR'),
         공매도잔고: Number(item.ssts_blnc_qty || 0).toLocaleString('ko-KR'),
@@ -242,10 +247,7 @@ export const getProgramTrading = new DynamicStructuredTool({
   description:
     '시장 전체의 프로그램 매매 현황을 조회합니다. 차익/비차익 프로그램 매매 동향을 확인할 수 있습니다.',
   schema: z.object({
-    market: z
-      .enum(['kospi', 'kosdaq'])
-      .default('kospi')
-      .describe('시장 구분'),
+    market: z.enum(['kospi', 'kosdaq']).default('kospi').describe('시장 구분'),
   }),
   func: async (input) => {
     const fid_cond_mrkt_div_code = input.market === 'kosdaq' ? 'Q' : 'J';

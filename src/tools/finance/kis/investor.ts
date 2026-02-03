@@ -89,7 +89,7 @@ interface InvestorTimeItem {
 // ============================================================
 
 const TickerDateRangeInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
   start_date: z
     .string()
     .optional()
@@ -107,7 +107,7 @@ const MarketInputSchema = z.object({
 });
 
 const MemberInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
   count: z.number().default(20).describe('조회 회원사 수'),
 });
 
@@ -392,7 +392,7 @@ export const getMemberDaily = new DynamicStructuredTool({
 사용 시점: 특정 증권사의 매매 패턴 분석이 필요할 때
 키워드: 회원사일별, 증권사일별, 세력추적, 창구추이, 연속매매`,
   schema: z.object({
-    ticker: z.string().describe('종목코드 (6자리)'),
+    ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
     member_name: z.string().optional().describe('회원사명 (필터링용)'),
     start_date: z.string().optional().describe('시작일'),
     end_date: z.string().optional().describe('종료일'),

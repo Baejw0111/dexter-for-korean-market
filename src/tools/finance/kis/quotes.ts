@@ -175,11 +175,15 @@ interface MultiPriceItem {
 // ============================================================
 
 const TickerInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z
+    .string()
+    .describe('종목코드. 예: "005930", ETF는 "069500" 또는 "0048J0"'),
 });
 
 const TimeChartInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z
+    .string()
+    .describe('종목코드. 예: "005930", ETF는 "069500" 또는 "0048J0"'),
   period: z
     .enum(['1', '3', '5', '10', '15', '30', '60'])
     .default('1')
@@ -311,7 +315,7 @@ export const getConclusions = new DynamicStructuredTool({
 사용 시점: 실시간 체결 내역, 틱 데이터가 필요할 때
 키워드: 체결, 틱, 실시간체결, 체결내역, 거래내역`,
   schema: z.object({
-    ticker: z.string().describe('종목코드 (6자리)'),
+    ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
     count: z.number().default(30).describe('조회 개수'),
   }),
   func: async (input) => {
@@ -672,7 +676,7 @@ export const getDailyTradeVolume = new DynamicStructuredTool({
 사용 시점: 거래량 변화 패턴, 거래량 급증 확인이 필요할 때
 키워드: 일별거래량, 거래량추이, 거래량급증, 거래량분석`,
   schema: z.object({
-    ticker: z.string().describe('종목코드 (6자리)'),
+    ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
     days: z.number().default(30).describe('조회 일수'),
   }),
   func: async (input) => {

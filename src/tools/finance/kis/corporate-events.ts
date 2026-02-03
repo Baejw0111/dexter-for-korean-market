@@ -125,7 +125,7 @@ const DateRangeInputSchema = z.object({
 });
 
 const TickerInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
 });
 
 const DividendInputSchema = z.object({
@@ -513,7 +513,7 @@ export const getPeriodRights = new DynamicStructuredTool({
 사용 시점: 종목별 권리일정, 기준일 확인이 필요할 때
 키워드: 권리일정, 기준일, 배당일정, 증자일정, 권리락`,
   schema: z.object({
-    ticker: z.string().describe('종목코드 (6자리)'),
+    ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
     year: z.string().optional().describe('조회 연도 (YYYY). 생략시 올해'),
   }),
   func: async (input) => {

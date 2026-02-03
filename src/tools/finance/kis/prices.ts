@@ -70,7 +70,7 @@ interface DailyPriceResponse {
 const PriceSnapshotInputSchema = z.object({
   ticker: z
     .string()
-    .describe('종목코드 (6자리). 예: 삼성전자는 "005930", SK하이닉스는 "000660"'),
+    .describe('종목코드. 예: "005930", ETF는 "069500" 또는 "0048J0"'),
 });
 
 export const getPriceSnapshot = new DynamicStructuredTool({
@@ -111,7 +111,7 @@ export const getPriceSnapshot = new DynamicStructuredTool({
 });
 
 const PricesInputSchema = z.object({
-  ticker: z.string().describe('종목코드 (6자리). 예: "005930"'),
+  ticker: z.string().describe('종목코드. 예: "005930", ETF는 "0048J0"'),
   start_date: z
     .string()
     .optional()
@@ -124,10 +124,7 @@ const PricesInputSchema = z.object({
     .enum(['D', 'W', 'M', 'Y'])
     .default('D')
     .describe('기간 구분 (D: 일, W: 주, M: 월, Y: 년)'),
-  adjusted: z
-    .boolean()
-    .default(true)
-    .describe('수정주가 반영 여부'),
+  adjusted: z.boolean().default(true).describe('수정주가 반영 여부'),
 });
 
 export const getPrices = new DynamicStructuredTool({
@@ -147,7 +144,9 @@ export const getPrices = new DynamicStructuredTool({
         FID_INPUT_DATE_1: startDate,
         FID_INPUT_DATE_2: endDate,
         FID_PERIOD_DIV_CODE: input.period,
-        FID_ORG_ADJ_PRC: input.adjusted ? ADJ_PRICE_CODE.ADJUSTED : ADJ_PRICE_CODE.UNADJUSTED,
+        FID_ORG_ADJ_PRC: input.adjusted
+          ? ADJ_PRICE_CODE.ADJUSTED
+          : ADJ_PRICE_CODE.UNADJUSTED,
       },
       { trId: TR_ID.PRICE_DAILY }
     );
